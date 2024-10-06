@@ -3,8 +3,8 @@ var api = apiclient;
 var BlueprintApp = (function () {
     var blueprints = [];
     var authorName = "";
-    var currentBlueprint = null; // Variable para almacenar el blueprint actual
-    var currentPoints = []; // Almacena los puntos del blueprint actual
+    var currentBlueprint = null; // Inicializar la variable currentBlueprint
+    var currentPoints = []; // Inicializar la variable currentPoints
 
     var setAuthorName = function (newAuthorName) {
         authorName = newAuthorName;
@@ -35,8 +35,10 @@ var BlueprintApp = (function () {
 
     var updateBlueprintsByAuthor = function (author) {
         api.getBlueprintsByAuthor(author, function (data) {
+            // Almacenamos los planos obtenidos en la variable privada blueprints
             blueprints = data;
 
+            // Transformar los planos a una lista de objetos con nombre y número de puntos
             var transformedBlueprints = blueprints.map(function (blueprint) {
                 return {
                     name: blueprint.name,
@@ -45,7 +47,7 @@ var BlueprintApp = (function () {
             });
 
             renderTable(transformedBlueprints);
-            updateTotalPoints(); // Actualizar total de puntos después de obtener blueprints
+            updateTotalPoints(); // Actualizar el total de puntos al finalizar
         });
     };
 
@@ -54,7 +56,7 @@ var BlueprintApp = (function () {
             currentBlueprint = blueprint; // Almacenar el blueprint actual
             currentPoints = blueprint.points.slice(); // Almacenar los puntos actuales
             repaintCanvas(); // Repintar el canvas
-            $("#name-blueprint").text(`Current blueprint: ${blueprint.name}`);
+            $("#name-blueprint").text(`${blueprint.name}`); // Corregir la sintaxis aquí
         });
     };
 
@@ -74,7 +76,6 @@ var BlueprintApp = (function () {
             ctx.stroke();
         }
     };
-
     var initEventHandlers = function () {
         var canvas = document.getElementById("canvas");
 
@@ -93,42 +94,56 @@ var BlueprintApp = (function () {
             // Repintar el canvas
             repaintCanvas();
         });
+
+        // Vincula el evento del botón Save/Update
+        $("#saveUpdateBtn").on("click", saveOrUpdateBlueprint);
     };
 
-    var saveOrUpdateBlueprint = function () {
-            if (currentBlueprint) {
-                api.updateBlueprint(currentBlueprint.id, currentBlueprint, function () {
-                    // Después de actualizar, obtener todos los planos
-                    api.getBlueprintsByAuthor(authorName, function (data) {
-                        blueprints = data;
-                        renderTable(blueprints.map(function (bp) {
-                            return {
-                                name: bp.name,
-                                numberOfPoints: bp.points.length
-                            };
-                        }));
-                        updateTotalPoints(); // Recalcular puntos totales
-                    });
-                });
-            } else {
-                alert("No hay un blueprint seleccionado para actualizar.");
-            }
-        };
+   var saveOrUpdateBlueprint = function () {
+       // Obtener el nombre del plano desde el h2 en lugar de un input
+       var blueprintName = $("#name-blueprint").text().trim(); // Obtener el texto y usar trim()
 
+       if (!blueprintName) {
+           alert("Por favor seleccione un plano para actualizar."); // Mensaje si el nombre está vacío
+           return; // Salir de la función si el nombre está vacío
+       }
 
+       // Verificar que currentPoints no esté vacío
+       if (!Array.isArray(currentPoints) || currentPoints.length === 0) {
+           alert("Por favor agregue puntos al plano antes de guardar.");
+           return; // Salir si no hay puntos
+       }
+
+       console.log(blueprintName);
+       console.log(currentPoints);
+
+       var updatedBlueprint = {
+           name: blueprintName, // Nombre del plano
+           points: currentPoints // Aquí deberías llenar los puntos que componen el plano
+       };
+
+       // Llamar a la API para actualizar el plano
+       api.updateBlueprint(authorName, blueprintName, updatedBlueprint)
+           .done(function (response) {
+               alert("Plano actualizado con éxito.");
+               updateBlueprintsByAuthor(authorName); // Actualizar la lista de planos
+           })
+           .fail(function (error) {
+               console.error("Error al actualizar el plano: ", error);
+               alert("Error al actualizar el plano: " + error.responseText);
+           });
+
+   };
 
     return {
         setAuthorName: setAuthorName,
         updateBlueprintsByAuthor: updateBlueprintsByAuthor,
         drawBlueprint: drawBlueprint,
-        initEventHandlers: initEventHandlers,
+        initEventHandlers:initEventHandlers,
+        repaintCanvas: repaintCanvas,
         saveOrUpdateBlueprint: saveOrUpdateBlueprint
     };
 })();
-
-$("#saveUpdateBtn").on("click", function () {
-    BlueprintApp.saveOrUpdateBlueprint();
-});
 
 $("#getBlueprintsBtn").on("click", function () {
     var authorInput = $("#authorInput").val();
@@ -140,7 +155,6 @@ $("#getBlueprintsBtn").on("click", function () {
     }
 });
 
-// Inicializar manejadores de eventos después de que el DOM esté listo
 $(document).ready(function () {
     BlueprintApp.initEventHandlers();
 });
