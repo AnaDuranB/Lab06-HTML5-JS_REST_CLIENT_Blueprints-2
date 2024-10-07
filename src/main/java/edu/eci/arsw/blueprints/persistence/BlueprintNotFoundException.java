@@ -11,6 +11,7 @@ package edu.eci.arsw.blueprints.persistence;
  */
 public class BlueprintNotFoundException extends Exception{
     public static final String NONEXISTENT = "Blueprint doesn't exist";
+    public static final String NOT_FOUND = "The given blueprint was not found: ";
 
     public BlueprintNotFoundException(String message) {
         super(message);

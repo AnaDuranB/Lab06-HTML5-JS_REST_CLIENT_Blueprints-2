@@ -3,8 +3,9 @@ var api = apiclient;
 var BlueprintApp = (function () {
     var blueprints = [];
     var authorName = "";
-    var currentBlueprint = null; // Inicializar la variable currentBlueprint
-    var currentPoints = []; // Inicializar la variable currentPoints
+    var currentBlueprint = null;
+    var currentPoints = [];
+    var isCreatingNewBlueprint = false;
 
     var setAuthorName = function (newAuthorName) {
         authorName = newAuthorName;
@@ -35,10 +36,8 @@ var BlueprintApp = (function () {
 
     var updateBlueprintsByAuthor = function (author) {
         api.getBlueprintsByAuthor(author, function (data) {
-            // Almacenamos los planos obtenidos en la variable privada blueprints
             blueprints = data;
 
-            // Transformar los planos a una lista de objetos con nombre y número de puntos
             var transformedBlueprints = blueprints.map(function (blueprint) {
                 return {
                     name: blueprint.name,
@@ -47,16 +46,22 @@ var BlueprintApp = (function () {
             });
 
             renderTable(transformedBlueprints);
-            updateTotalPoints(); // Actualizar el total de puntos al finalizar
+            updateTotalPoints();
+        }).fail(function (error) {
+            console.error("Error al obtener los planos: ", error);
+            alert("Error al obtener los planos: " + error.responseText);
         });
     };
 
     var drawBlueprint = function (author, blueprintName) {
         api.getBlueprintsByNameAndAuthor(author, blueprintName, function (blueprint) {
-            currentBlueprint = blueprint; // Almacenar el blueprint actual
-            currentPoints = blueprint.points.slice(); // Almacenar los puntos actuales
-            repaintCanvas(); // Repintar el canvas
-            $("#name-blueprint").text(`${blueprint.name}`); // Corregir la sintaxis aquí
+            currentBlueprint = blueprint;
+            currentPoints = blueprint.points.slice();
+            repaintCanvas();
+            $("#name-blueprint").text(`${blueprint.name}`);
+            isCreatingNewBlueprint = false; // Cambiar a false porque se está editando un plano existente
+            // Limpiar el canvas antes de permitir la edición
+            repaintCanvas();
         });
     };
 
@@ -76,85 +81,138 @@ var BlueprintApp = (function () {
             ctx.stroke();
         }
     };
+
     var initEventHandlers = function () {
         var canvas = document.getElementById("canvas");
 
         canvas.addEventListener("pointerdown", function (event) {
-            if (!currentBlueprint) { // Solo si hay un blueprint seleccionado
-                return;
-            }
-
+            // Permitir dibujar si se está editando un plano existente
             var rect = canvas.getBoundingClientRect();
             var x = event.clientX - rect.left;
             var y = event.clientY - rect.top;
 
-            // Agregar el nuevo punto a la secuencia de puntos
             currentPoints.push({ x: x, y: y });
 
-            // Repintar el canvas
             repaintCanvas();
         });
 
-        // Vincula el evento del botón Save/Update
         $("#saveUpdateBtn").on("click", saveOrUpdateBlueprint);
+        $("#createBlueprintBtn").on("click", createNewBlueprint);
     };
 
-   var saveOrUpdateBlueprint = function () {
-       // Obtener el nombre del plano desde el h2 en lugar de un input
-       var blueprintName = $("#name-blueprint").text().trim(); // Obtener el texto y usar trim()
+    var saveOrUpdateBlueprint = function () {
+        var blueprintName = $("#name-blueprint").text().trim();
 
-       if (!blueprintName) {
-           alert("Por favor seleccione un plano para actualizar."); // Mensaje si el nombre está vacío
-           return; // Salir de la función si el nombre está vacío
-       }
+        if (!Array.isArray(currentPoints) || currentPoints.length === 0) {
+            alert("Por favor agregue puntos al plano antes de guardar.");
+            return;
+        }
 
-       // Verificar que currentPoints no esté vacío
-       if (!Array.isArray(currentPoints) || currentPoints.length === 0) {
-           alert("Por favor agregue puntos al plano antes de guardar.");
-           return; // Salir si no hay puntos
-       }
+        var blueprintData = {
+            author: authorName,
+            name: blueprintName,
+            points: currentPoints
+        };
 
-       console.log(blueprintName);
-       console.log(currentPoints);
+        if (isCreatingNewBlueprint) {
+            api.addBlueprint(blueprintData, function () {
+                alert("Blueprint created successfully.");
+                updateBlueprintsByAuthor(authorName);
+                currentPoints = [];
+                repaintCanvas();
+                isCreatingNewBlueprint = false;
+                currentBlueprint = null;
+            }).fail(function (error) {
+                console.error("Error al crear el plano: ", error);
+                alert("Error al crear el plano: " + error.responseText);
+            });
+        } else {
+            api.updateBlueprint(authorName, blueprintName, blueprintData)
+                .done(function (response) {
+                    alert("Plano actualizado con éxito.");
+                    updateBlueprintsByAuthor(authorName);
+                })
+                .fail(function (error) {
+                    console.error("Error al actualizar el plano: ", error);
+                    alert("Error al actualizar el plano: " + error.responseText);
+                });
+        }
+    };
 
-       var updatedBlueprint = {
-           name: blueprintName, // Nombre del plano
-           points: currentPoints // Aquí deberías llenar los puntos que componen el plano
-       };
+    var createNewBlueprint = function () {
+        var authorInput = prompt("Please enter the author's name:");
+        if (!authorInput) {
+            alert("Author name cannot be empty. Please try again.");
+            return;
+        }
 
-       // Llamar a la API para actualizar el plano
-       api.updateBlueprint(authorName, blueprintName, updatedBlueprint)
-           .done(function (response) {
-               alert("Plano actualizado con éxito.");
-               updateBlueprintsByAuthor(authorName); // Actualizar la lista de planos
-           })
-           .fail(function (error) {
-               console.error("Error al actualizar el plano: ", error);
-               alert("Error al actualizar el plano: " + error.responseText);
-           });
+        BlueprintApp.setAuthorName(authorInput);
+        repaintCanvas();
 
-   };
+        var blueprintName = prompt("Please enter the name of the new blueprint:");
+        if (!blueprintName) {
+            alert("Blueprint name cannot be empty.");
+            return;
+        }
+
+        isCreatingNewBlueprint = true;
+
+        $("#name-blueprint").text(blueprintName);
+        currentPoints = [];
+        repaintCanvas();
+    };
+
+    var deleteBlueprint = function () {
+        if (!currentBlueprint) {
+            alert("No blueprint selected for deletion.");
+            return;
+        }
+
+        var blueprintName = currentBlueprint.name;
+        var author = authorName; // Get the author's name
+
+        // Clear the canvas first
+        repaintCanvas();
+
+        // Make the DELETE call
+        api.deleteBlueprint(author, blueprintName, function () {
+            alert("Blueprint successfully deleted.");
+            // Update the list of blueprints
+            updateBlueprintsByAuthor(author);
+            currentBlueprint = null; // Reset the current blueprint
+            currentPoints = []; // Clear points
+            $("#name-blueprint").text(''); // Clear the blueprint name displayed
+        }).fail(function (error) {
+            console.error("Error deleting the blueprint: ", error);
+            alert("Error deleting the blueprint: " + error.responseText);
+        });
+    };
+
 
     return {
         setAuthorName: setAuthorName,
         updateBlueprintsByAuthor: updateBlueprintsByAuthor,
         drawBlueprint: drawBlueprint,
-        initEventHandlers:initEventHandlers,
+        initEventHandlers: initEventHandlers,
         repaintCanvas: repaintCanvas,
-        saveOrUpdateBlueprint: saveOrUpdateBlueprint
+        saveOrUpdateBlueprint: saveOrUpdateBlueprint,
+        deleteBlueprint: deleteBlueprint
     };
 })();
 
-$("#getBlueprintsBtn").on("click", function () {
-    var authorInput = $("#authorInput").val();
-    if (authorInput) {
-        BlueprintApp.setAuthorName(authorInput);
-        BlueprintApp.updateBlueprintsByAuthor(authorInput);
-    } else {
-        alert("Por favor ingrese un nombre de autor.");
-    }
-});
-
 $(document).ready(function () {
     BlueprintApp.initEventHandlers();
+
+    $("#getBlueprintsBtn").on("click", function () {
+        var authorInput = $("#authorInput").val();
+        if (authorInput) {
+            BlueprintApp.setAuthorName(authorInput);
+            BlueprintApp.updateBlueprintsByAuthor(authorInput);
+        } else {
+            alert("Please enter an author's name.");
+        }
+    });
+    $('#deleteBtn').on('click', function() {
+        BlueprintApp.deleteBlueprint();
+    });
 });

@@ -52,11 +52,25 @@ var apiclient = (function () {
                 contentType: "application/json",
                 data: JSON.stringify(updatedBlueprint)
             }).done(function (data) {
-                 return data;
+                return data;
             }).fail(function (error) {
                 console.error("Error al actualizar el plano: ", error);
             });
         },
+
+        // Eliminar un plano existente
+        deleteBlueprint: function (author, blueprintName, callback) {
+            return $.ajax({
+                url: apiUrl + "/" + author + "/" + blueprintName,
+                type: "DELETE",
+                contentType: 'application/json'
+            }).done(function () {
+                // Llama al callback para obtener los planos disponibles nuevamente
+                callback();
+            }).fail(function (error) {
+                console.error("Error al eliminar el plano: ", error);
+            });
+        }, // Aquí agregamos la coma
 
         // Obtener todos los planos
         getAllBlueprints: function (callback) {

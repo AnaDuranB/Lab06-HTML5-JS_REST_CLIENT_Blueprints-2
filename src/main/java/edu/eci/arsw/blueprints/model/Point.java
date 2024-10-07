@@ -13,10 +13,10 @@ import java.util.Objects;
  */
 public class Point {
    
-    private int x;
-    private int y;
+    private double x;
+    private double y;
 
-    public Point(int x, int y) {
+    public Point(double x, double y) {
         this.x = x;
         this.y = y;
     }
@@ -24,7 +24,7 @@ public class Point {
     public Point() {
     }    
     
-    public int getX() {
+    public double getX() {
         return x;
     }
 
@@ -32,7 +32,7 @@ public class Point {
         this.x = x;
     }
 
-    public int getY() {
+    public double getY() {
         return y;
     }
 
@@ -49,7 +49,7 @@ public class Point {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Point point = (Point) o;
-        return x == point.x && y == point.y;
+        return Double.compare(point.x, x) == 0 && Double.compare(point.y, y) == 0;
     }
     @Override
     public int hashCode() {

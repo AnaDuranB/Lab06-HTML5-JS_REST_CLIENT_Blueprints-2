@@ -93,5 +93,12 @@ public class InMemoryBlueprintPersistence implements BlueprintsPersistence{
     public Set<Blueprint> getAllBluePrints() {
         return blueprints.values().stream().collect(Collectors.toSet());
     }
-
+    @Override
+    public void deleteBlueprint(String author, String bprintname) throws BlueprintNotFoundException {
+        Blueprint blueprint = blueprints.get(new Tuple<>(author, bprintname));
+        if (blueprint == null) {
+            throw new BlueprintNotFoundException(BlueprintNotFoundException.NOT_FOUND + author + bprintname);
+        }
+        blueprints.remove(new Tuple<>(author, bprintname));
+    }
 }

@@ -63,15 +63,19 @@ public class BlueprintAPIController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<?> manejadorPostBlueprint(@RequestBody Blueprint blueprint){
+    public ResponseEntity<?> manejadorPostBlueprint(@RequestBody Blueprint blueprint) {
+        if (blueprint.getAuthor() == null || blueprint.getName() == null || blueprint.getPoints() == null || blueprint.getPoints().isEmpty()) {
+            return new ResponseEntity<>("Faltan datos requeridos.", HttpStatus.BAD_REQUEST);
+        }
         try {
             blueprintsServices.addNewBlueprint(blueprint);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } catch (BlueprintPersistenceException e) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, e);
-            return new ResponseEntity<>("Error al registrar el plano.",HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>("Error al registrar el plano.", HttpStatus.FORBIDDEN);
         }
     }
+
 
     @PutMapping("/{author}/{bpname}")
     public ResponseEntity<?> updateBlueprint(
@@ -81,6 +85,16 @@ public class BlueprintAPIController {
         try {
             blueprintsServices.updateBlueprint(author, bpname, updatedBlueprint);
             return new ResponseEntity<>(HttpStatus.OK);
+        } catch (BlueprintNotFoundException e) {
+            Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, e);
+            return new ResponseEntity<>("Plano no encontrado", HttpStatus.NOT_FOUND);
+        }
+    }
+    @DeleteMapping("/{author}/{bpname}")
+    public ResponseEntity<?> deleteBlueprint(@PathVariable String author, @PathVariable String bpname) {
+        try {
+            blueprintsServices.deleteBlueprint(author, bpname);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content
         } catch (BlueprintNotFoundException e) {
             Logger.getLogger(BlueprintAPIController.class.getName()).log(Level.SEVERE, null, e);
             return new ResponseEntity<>("Plano no encontrado", HttpStatus.NOT_FOUND);
