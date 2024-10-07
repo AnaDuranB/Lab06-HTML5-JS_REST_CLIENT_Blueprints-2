@@ -55,11 +55,33 @@
 	1. Hacer POST al recurso /blueprints, para crear el nuevo plano.
 	2. Hacer GET a este mismo recurso, para actualizar el listado de planos y el puntaje del usuario.
 
+		- Ingresamos el nombre del nuevo autor
+
+			![image](https://github.com/user-attachments/assets/e0b6d6f6-43fa-4d0d-8041-6c7a1673d5c3)
+
+		- Ingresamos el nombre del nuevo plano
+
+			![image](https://github.com/user-attachments/assets/51cdd1ac-7714-425d-9009-352777736aa4)
+
+		- Dibujamos el plano y lo guardamos
+
+			![image](https://github.com/user-attachments/assets/f38b9247-dffa-4542-b52d-b6791d38f858)
+
+		- Verificamos que efectivamente se haga GET a este mismo recurso, para actualizar el listado de planos y el puntaje del usuario.
+
+			![image](https://github.com/user-attachments/assets/0fad2320-d1bf-4220-937e-750550e9f15e)
+
+
 5. Agregue el botón 'DELETE', de manera que (también con promesas):
 	* Borre el canvas.
 	* Haga DELETE del recurso correspondiente.
 	* Haga GET de los planos ahora disponibles.
 
+		- Hacemos delete de uno de los planos de "Fabian"
+			![image](https://github.com/user-attachments/assets/9290f11a-f835-43fa-bdce-a818d9f6a7d4)
+
+		- Verificamos que el canvas se borre, y se haga el GET de los planos ahora disponibles
+			
 ### Criterios de evaluación
 
 1. Funcional
