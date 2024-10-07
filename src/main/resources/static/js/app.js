@@ -6,6 +6,7 @@ var BlueprintApp = (function () {
     var currentBlueprint = null;
     var currentPoints = [];
     var isCreatingNewBlueprint = false;
+    var hasErrorBeenShown = false;
 
     var setAuthorName = function (newAuthorName) {
         authorName = newAuthorName;
@@ -42,10 +43,13 @@ var BlueprintApp = (function () {
     var updateBlueprintsByAuthor = function (author) {
         api.getBlueprintsByAuthor(author, function (data) {
             if (!data && author) {
-                alert("Error retrieving blueprints. Please try again.");
+                if (!hasErrorBeenShown) {
+                    alert("Error retrieving blueprints. Please try again.");
+                    hasErrorBeenShown = true;
+                }
                 return;
             }
-
+            hasErrorBeenShown = false;
             blueprints = data;
 
             if (blueprints.length === 0) {
@@ -68,10 +72,7 @@ var BlueprintApp = (function () {
 
             renderTable(transformedBlueprints);
             updateTotalPoints();
-        }).fail(function (error) {
-            console.error("Error retrieving the blueprints: ", error);
-            alert("Error retrieving the blueprints: " + error.responseText);
-        });
+        })
     };
 
 

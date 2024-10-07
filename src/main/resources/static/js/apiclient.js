@@ -10,7 +10,7 @@ var apiclient = (function () {
                 contentType: "application/json",
                 dataType: "json"
             }).done(function (data) {
-                callback(data || []);
+                callback(data);
             }).fail(function (error) {
                 console.error("Error retrieving the blueprints: ", error);
                 callback(null);
@@ -28,6 +28,7 @@ var apiclient = (function () {
                 callback(data);
             }).fail(function (error) {
                 console.error("Error retrieving the blueprints: ", error);
+                callback(null);
             });
         },
 
