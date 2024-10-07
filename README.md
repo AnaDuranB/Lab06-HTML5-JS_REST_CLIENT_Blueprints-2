@@ -37,6 +37,13 @@
 	```
 	* Como en este caso se tienen tres operaciones basadas en _callbacks_, y que las mismas requieren realizarse en un orden específico, tenga en cuenta cómo usar las promesas de JavaScript [mediante alguno de los ejemplos disponibles](http://codepen.io/hcadavid/pen/jrwdgK).
 
+- Seleccionamos un plano de "Fabian"
+	![1](https://github.com/user-attachments/assets/c9dc0ba9-b105-4c59-95db-7dd85b787d34)
+
+- Modificamos el plano de Fabian y lo actualizamos
+	![2](https://github.com/user-attachments/assets/1872f6d4-0473-4dfc-9970-32ff43cf2fa0)
+
+  	
 4. Agregue el botón 'Create new blueprint', de manera que cuando se oprima: 
 	* Se borre el canvas actual.
 	* Se solicite el nombre del nuevo 'blueprint' (usted decide la manera de hacerlo).
