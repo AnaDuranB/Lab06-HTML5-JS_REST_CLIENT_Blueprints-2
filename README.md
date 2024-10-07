@@ -1,5 +1,6 @@
 #### Escuela Colombiana de Ingeniería
 #### Procesos de desarrollo de software - PDSW
+### Desarrollado por Laura Natalia Rojas y Ana Maria Duran
 #### Construción de un cliente 'grueso' con un API REST, HTML5, Javascript y CSS3. Parte II.
 
 
@@ -78,10 +79,13 @@
 	* Haga GET de los planos ahora disponibles.
 
 		- Hacemos delete de uno de los planos de "Fabian"
+
 			![image](https://github.com/user-attachments/assets/9290f11a-f835-43fa-bdce-a818d9f6a7d4)
 
 		- Verificamos que el canvas se borre, y se haga el GET de los planos ahora disponibles
-			
+
+			![image](https://github.com/user-attachments/assets/22899250-8f3d-41c7-8781-db6833577a2c)
+
 ### Criterios de evaluación
 
 1. Funcional
