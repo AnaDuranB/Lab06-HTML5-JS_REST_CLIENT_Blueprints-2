@@ -198,6 +198,10 @@ var BlueprintApp = (function () {
 
         api.deleteBlueprint(author, blueprintName, function () {
             alert("Blueprint successfully deleted.");
+            currentBlueprint = null;
+            currentPoints = [];
+            $("#name-blueprint").text('');
+            repaintCanvas();
             api.getBlueprintsByAuthor(author, function (data) {
                 if (data && data.length > 0) {
                     updateBlueprintsByAuthor(author);
@@ -207,7 +211,6 @@ var BlueprintApp = (function () {
                     currentPoints = [];
                     $("#name-blueprint").text('');
                     repaintCanvas();
-
                     window.location.reload();
                 }
             });
