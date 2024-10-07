@@ -10,6 +10,7 @@ var BlueprintApp = (function () {
     var setAuthorName = function (newAuthorName) {
         authorName = newAuthorName;
         document.getElementById("selectedAuthor").innerText = authorName;
+        updateBlueprintsByAuthor(authorName);
     };
 
     var updateTotalPoints = function () {
@@ -20,6 +21,10 @@ var BlueprintApp = (function () {
     };
 
     var renderTable = function (blueprintList) {
+        if (blueprintList.length === 0) {
+            $("#blueprintsTable tbody").html("");
+            return;
+        }
         var tableBody = blueprintList.map(function (blueprint) {
             return `
                 <tr>
@@ -36,7 +41,23 @@ var BlueprintApp = (function () {
 
     var updateBlueprintsByAuthor = function (author) {
         api.getBlueprintsByAuthor(author, function (data) {
+            if (!data && author) {
+                alert("Error retrieving blueprints. Please try again.");
+                return;
+            }
+
             blueprints = data;
+
+            if (blueprints.length === 0) {
+                alert("No blueprints found for this author.");
+                renderTable([]);
+                updateTotalPoints();
+                currentBlueprint = null;
+                currentPoints = [];
+                $("#name-blueprint").text('');
+                repaintCanvas();
+                return;
+            }
 
             var transformedBlueprints = blueprints.map(function (blueprint) {
                 return {
@@ -48,10 +69,11 @@ var BlueprintApp = (function () {
             renderTable(transformedBlueprints);
             updateTotalPoints();
         }).fail(function (error) {
-            console.error("Error al obtener los planos: ", error);
-            alert("Error al obtener los planos: " + error.responseText);
+            console.error("Error retrieving the blueprints: ", error);
+            alert("Error retrieving the blueprints: " + error.responseText);
         });
     };
+
 
     var drawBlueprint = function (author, blueprintName) {
         api.getBlueprintsByNameAndAuthor(author, blueprintName, function (blueprint) {
@@ -59,8 +81,7 @@ var BlueprintApp = (function () {
             currentPoints = blueprint.points.slice();
             repaintCanvas();
             $("#name-blueprint").text(`${blueprint.name}`);
-            isCreatingNewBlueprint = false; // Cambiar a false porque se está editando un plano existente
-            // Limpiar el canvas antes de permitir la edición
+            isCreatingNewBlueprint = false;
             repaintCanvas();
         });
     };
@@ -86,7 +107,10 @@ var BlueprintApp = (function () {
         var canvas = document.getElementById("canvas");
 
         canvas.addEventListener("pointerdown", function (event) {
-            // Permitir dibujar si se está editando un plano existente
+            if (!isCreatingNewBlueprint && !currentBlueprint) {
+                alert("You must create a new blueprint or open an existing one to draw.");
+                return;
+            }
             var rect = canvas.getBoundingClientRect();
             var x = event.clientX - rect.left;
             var y = event.clientY - rect.top;
@@ -104,7 +128,7 @@ var BlueprintApp = (function () {
         var blueprintName = $("#name-blueprint").text().trim();
 
         if (!Array.isArray(currentPoints) || currentPoints.length === 0) {
-            alert("Por favor agregue puntos al plano antes de guardar.");
+            alert("Please add points to the blueprint before saving.");
             return;
         }
 
@@ -123,18 +147,18 @@ var BlueprintApp = (function () {
                 isCreatingNewBlueprint = false;
                 currentBlueprint = null;
             }).fail(function (error) {
-                console.error("Error al crear el plano: ", error);
-                alert("Error al crear el plano: " + error.responseText);
+                console.error("Error creating the blueprint: ", error);
+                alert("Error creating the blueprint: " + error.responseText);
             });
         } else {
             api.updateBlueprint(authorName, blueprintName, blueprintData)
                 .done(function (response) {
-                    alert("Plano actualizado con éxito.");
+                    alert("Blueprint updated successfully.");
                     updateBlueprintsByAuthor(authorName);
                 })
                 .fail(function (error) {
-                    console.error("Error al actualizar el plano: ", error);
-                    alert("Error al actualizar el plano: " + error.responseText);
+                    console.error("Error updating the blueprint: ", error);
+                    alert("Error updating the blueprint: " + error.responseText);
                 });
         }
     };
@@ -169,24 +193,29 @@ var BlueprintApp = (function () {
         }
 
         var blueprintName = currentBlueprint.name;
-        var author = authorName; // Get the author's name
+        var author = authorName;
 
-        // Clear the canvas first
-        repaintCanvas();
-
-        // Make the DELETE call
         api.deleteBlueprint(author, blueprintName, function () {
             alert("Blueprint successfully deleted.");
-            // Update the list of blueprints
-            updateBlueprintsByAuthor(author);
-            currentBlueprint = null; // Reset the current blueprint
-            currentPoints = []; // Clear points
-            $("#name-blueprint").text(''); // Clear the blueprint name displayed
+            api.getBlueprintsByAuthor(author, function (data) {
+                if (data && data.length > 0) {
+                    updateBlueprintsByAuthor(author);
+                } else {
+                    alert("No more blueprints available for this author.");
+                    currentBlueprint = null;
+                    currentPoints = [];
+                    $("#name-blueprint").text('');
+                    repaintCanvas();
+
+                    window.location.reload();
+                }
+            });
         }).fail(function (error) {
             console.error("Error deleting the blueprint: ", error);
             alert("Error deleting the blueprint: " + error.responseText);
         });
     };
+
 
 
     return {

@@ -10,9 +10,10 @@ var apiclient = (function () {
                 contentType: "application/json",
                 dataType: "json"
             }).done(function (data) {
-                callback(data);
+                callback(data || []);
             }).fail(function (error) {
-                console.error("Error al obtener los planos: ", error);
+                console.error("Error retrieving the blueprints: ", error);
+                callback(null);
             });
         },
 
@@ -26,7 +27,7 @@ var apiclient = (function () {
             }).done(function (data) {
                 callback(data);
             }).fail(function (error) {
-                console.error("Error al obtener el plano: ", error);
+                console.error("Error retrieving the blueprints: ", error);
             });
         },
 
@@ -40,7 +41,7 @@ var apiclient = (function () {
             }).done(function () {
                 callback();
             }).fail(function (error) {
-                console.error("Error al agregar el plano: ", error);
+                console.error("Error retrieving the blueprint: ", error);
             });
         },
 
@@ -54,7 +55,7 @@ var apiclient = (function () {
             }).done(function (data) {
                 return data;
             }).fail(function (error) {
-                console.error("Error al actualizar el plano: ", error);
+                console.error("Error updating the blueprints: ", error);
             });
         },
 
@@ -65,12 +66,11 @@ var apiclient = (function () {
                 type: "DELETE",
                 contentType: 'application/json'
             }).done(function () {
-                // Llama al callback para obtener los planos disponibles nuevamente
                 callback();
             }).fail(function (error) {
-                console.error("Error al eliminar el plano: ", error);
+                console.error("Error deleting the blueprints: ", error);
             });
-        }, // Aquí agregamos la coma
+        },
 
         // Obtener todos los planos
         getAllBlueprints: function (callback) {
@@ -82,7 +82,7 @@ var apiclient = (function () {
             }).done(function (data) {
                 callback(data);
             }).fail(function (error) {
-                console.error("Error al obtener todos los planos: ", error);
+                console.error("Error retrieving the blueprints: ", error);
             });
         }
     };
