@@ -13,7 +13,7 @@ var apiclient = (function () {
                 callback(data);
             }).fail(function (error) {
                 console.error("Error retrieving the blueprints: ", error);
-                callback(null);
+                callback({ error: true });
             });
         },
 

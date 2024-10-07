@@ -42,17 +42,17 @@ var BlueprintApp = (function () {
 
     var updateBlueprintsByAuthor = function (author) {
         api.getBlueprintsByAuthor(author, function (data) {
-            if (!data && author) {
-                if (!hasErrorBeenShown) {
+            if (data && data.error) {
+                if (!isCreatingNewBlueprint && !hasErrorBeenShown) {
                     alert("Error retrieving blueprints. Please try again.");
                     hasErrorBeenShown = true;
                 }
                 return;
             }
             hasErrorBeenShown = false;
-            blueprints = data;
+            blueprints = data || [];
 
-            if (blueprints.length === 0) {
+            if (blueprints.length === 0 && !isCreatingNewBlueprint) {
                 alert("No blueprints found for this author.");
                 renderTable([]);
                 updateTotalPoints();
